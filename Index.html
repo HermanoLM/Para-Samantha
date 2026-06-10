@@ -21,6 +21,10 @@
     --gold-soft: rgba(201,169,110,0.18);
     --white:    #ffffff;
     --overlay:  rgba(20, 10, 8, 0.55);
+    /* Time-of-day theme — overridden by JS */
+    --theme-tint: rgba(0,0,0,0);
+    --theme-gold: #c9a96e;
+    --theme-cream: #f5efe6;
     /* Per-letter accent colors for poems */
     --accent-S: #c9a96e;
     --accent-A: #e8c4b0;
@@ -28,6 +32,45 @@
     --accent-N: #b0c4d8;
     --accent-T: #a8c4a2;
     --accent-H: #d4a8c7;
+  }
+
+  /* Time-of-day tint layer */
+  #time-tint {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    background: var(--theme-tint);
+    pointer-events: none;
+    transition: background 4s ease;
+  }
+
+  /* ============================================================
+     IRIS TRANSITION — expands from center on launch
+  ============================================================ */
+  #iris {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+  }
+  #iris svg {
+    position: absolute;
+    width: 100vmax;
+    height: 100vmax;
+    transform: scale(0);
+    transform-origin: center;
+  }
+  #iris.open svg {
+    animation: irisOpen 1.1s cubic-bezier(0.77,0,0.18,1) forwards;
+  }
+  @keyframes irisOpen {
+    0%   { transform: scale(0); opacity: 1; }
+    85%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1.1); opacity: 0; }
   }
 
   html, body {
@@ -94,8 +137,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2.4rem;
-    padding: 2rem;
+    gap: 0;
+    padding: 2rem 1.5rem;
     transition: opacity 1.2s ease;
   }
   #phase-wait.hidden {
@@ -103,82 +146,164 @@
     pointer-events: none;
   }
 
-  .label-for {
-    font-family: 'Dancing Script', cursive;
-    font-size: clamp(2rem, 7vw, 3.2rem);
-    color: var(--cream);
-    letter-spacing: 0.04em;
-    text-shadow: 0 2px 24px rgba(0,0,0,0.5);
-    animation: fadeSlideUp 1.4s ease both;
+  /* Decorative ring around the whole screen */
+  #phase-wait::before {
+    content: '';
+    position: absolute;
+    inset: 1.8rem;
+    border: 1px solid rgba(201,169,110,0.1);
+    border-radius: 4px;
+    pointer-events: none;
+    animation: ringBreath 5s ease-in-out infinite alternate;
+  }
+  #phase-wait::after {
+    content: '';
+    position: absolute;
+    inset: 2.4rem;
+    border: 1px solid rgba(201,169,110,0.05);
+    border-radius: 3px;
+    pointer-events: none;
+    animation: ringBreath 5s 1s ease-in-out infinite alternate;
+  }
+  @keyframes ringBreath {
+    0%   { opacity: 0.4; }
+    100% { opacity: 1; }
   }
 
-  /* Countdown clock */
+  /* Corner ornaments */
+  .corner {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-color: rgba(201,169,110,0.35);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .corner-tl { top: 1.8rem; left: 1.8rem; border-width: 1px 0 0 1px; }
+  .corner-tr { top: 1.8rem; right: 1.8rem; border-width: 1px 1px 0 0; }
+  .corner-bl { bottom: 1.8rem; left: 1.8rem; border-width: 0 0 1px 1px; }
+  .corner-br { bottom: 1.8rem; right: 1.8rem; border-width: 0 1px 1px 0; }
+
+  .label-for {
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(2.8rem, 10vw, 5rem);
+    color: var(--cream);
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 40px rgba(201,169,110,0.3), 0 2px 24px rgba(0,0,0,0.5);
+    animation: fadeSlideUp 1.4s ease both;
+    margin-bottom: 0;
+    line-height: 1.1;
+  }
+
+  /* Natural language phrase — main element */
+  .countdown-phrase {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(0.78rem, 2.8vw, 0.95rem);
+    color: var(--gold);
+    opacity: 0.65;
+    letter-spacing: 0.1em;
+    text-align: center;
+    margin: 0.4rem 0 2rem;
+    animation: fadeSlideUp 1.5s 0.15s ease both;
+    min-height: 1.4em;
+  }
+
+  /* Countdown clock — clean columns, no separators */
   .clock-wrapper {
     display: flex;
-    gap: clamp(0.8rem, 3vw, 2rem);
+    gap: clamp(1.2rem, 4vw, 3rem);
     align-items: flex-start;
     animation: fadeSlideUp 1.6s 0.2s ease both;
+    margin-bottom: 0.6rem;
+    position: relative;
   }
+  /* Subtle vertical dividers between units */
   .clock-unit {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.4rem;
+    position: relative;
+  }
+  .clock-unit + .clock-unit::before {
+    content: '';
+    position: absolute;
+    left: calc(-1 * clamp(0.6rem, 2vw, 1.5rem));
+    top: 10%;
+    height: 80%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(201,169,110,0.2), transparent);
   }
   .clock-number {
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    font-size: clamp(3rem, 14vw, 6.5rem);
+    font-size: clamp(3.5rem, 14vw, 6.5rem);
     color: var(--cream);
     line-height: 1;
-    text-shadow: 
-      0 0 12px rgba(201,169,110,0.9),
-      0 0 40px rgba(201,169,110,0.45),
-      0 0 80px rgba(201,169,110,0.2),
-      0 2px 16px rgba(0,0,0,0.6);
+    text-shadow: 0 0 30px rgba(201,169,110,0.5), 0 2px 16px rgba(0,0,0,0.6);
     min-width: 2ch;
     text-align: center;
     letter-spacing: -0.01em;
+    will-change: opacity;
     animation: candleFlicker 3.5s ease-in-out infinite alternate;
   }
 
   @keyframes candleFlicker {
-    0%   { text-shadow: 0 0 12px rgba(201,169,110,0.9), 0 0 40px rgba(201,169,110,0.45), 0 0 80px rgba(201,169,110,0.2), 0 2px 16px rgba(0,0,0,0.6); }
-    30%  { text-shadow: 0 0 8px  rgba(201,169,110,0.7), 0 0 28px rgba(201,169,110,0.3), 0 0 55px rgba(201,169,110,0.15), 0 2px 16px rgba(0,0,0,0.6); }
-    60%  { text-shadow: 0 0 18px rgba(201,169,110,1.0), 0 0 55px rgba(201,169,110,0.55), 0 0 90px rgba(201,169,110,0.25), 0 2px 16px rgba(0,0,0,0.6); }
-    100% { text-shadow: 0 0 10px rgba(201,169,110,0.8), 0 0 35px rgba(201,169,110,0.4), 0 0 70px rgba(201,169,110,0.18), 0 2px 16px rgba(0,0,0,0.6); }
+    0%   { opacity: 1; }
+    30%  { opacity: 0.88; }
+    60%  { opacity: 1; }
+    80%  { opacity: 0.93; }
+    100% { opacity: 0.96; }
   }
   .clock-label {
     font-family: 'Raleway', sans-serif;
     font-weight: 200;
-    font-size: clamp(0.55rem, 2.2vw, 0.72rem);
+    font-size: clamp(0.44rem, 1.6vw, 0.58rem);
     color: var(--blush);
-    letter-spacing: 0.25em;
+    letter-spacing: 0.35em;
     text-transform: uppercase;
-  }
-  .clock-sep {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 10vw, 4.5rem);
-    color: var(--gold);
+    position: relative;
     opacity: 0.6;
-    line-height: 1;
-    padding-top: 0.05em;
-    animation: blink 1s step-end infinite;
   }
-  @keyframes blink { 0%,100%{opacity:.6} 50%{opacity:.15} }
+
+  /* Progress bar */
+  .clock-progress-bar {
+    width: min(260px, 55vw);
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 1px;
+    margin: 1.4rem 0 1.6rem;
+    animation: fadeSlideUp 2s 0.5s ease both;
+    overflow: hidden;
+  }
+  .clock-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, transparent, var(--gold), rgba(201,169,110,0.4));
+    border-radius: 1px;
+    transition: width 1.5s ease;
+    box-shadow: 0 0 8px rgba(201,169,110,0.5);
+  }
 
   .tagline {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
     font-weight: 300;
-    font-size: clamp(0.85rem, 3.5vw, 1.15rem);
+    font-size: clamp(0.72rem, 2.6vw, 0.9rem);
     color: var(--blush);
     text-align: center;
-    max-width: 340px;
-    line-height: 1.65;
-    letter-spacing: 0.02em;
+    max-width: 280px;
+    line-height: 1.75;
+    letter-spacing: 0.03em;
     text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+    opacity: 0.55;
     animation: fadeSlideUp 1.8s 0.4s ease both;
+  }
+  .deco-line {
+    width: 1px; height: 32px;
+    background: linear-gradient(to bottom, transparent, rgba(201,169,110,0.35), transparent);
+    margin: 0.8rem 0;
+    animation: fadeSlideUp 2s 0.6s ease both;
   }
 
   /* Floating gold particles canvas */
@@ -205,10 +330,10 @@
     letter-spacing: 0.15em;
     cursor: pointer;
     border-radius: 2px;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(2px);
     position: relative;
     overflow: hidden;
-    transition: all 0.4s ease;
+    transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
     animation: fadeSlideUp 1s ease both, btnGlow 2.8s ease-in-out infinite alternate;
   }
   .open-btn::before {
@@ -400,8 +525,8 @@
     letter-spacing: 0.1em;
     cursor: pointer;
     border-radius: 2px;
-    backdrop-filter: blur(4px);
-    transition: all 0.4s ease;
+    backdrop-filter: blur(2px);
+    transition: transform 0.4s ease, background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
     animation: fadeSlideUp 1s ease both;
   }
   .open-btn:hover { background: rgba(201,169,110,0.15); border-color: var(--gold); }
@@ -447,8 +572,8 @@
     color: var(--cream);
     background: rgba(255,255,255,0.07);
     border: 1px solid rgba(201,169,110,0.25);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
     padding: 0.65rem 1.1rem;
     border-radius: 18px 18px 18px 4px;
     max-width: 55vw;
@@ -510,7 +635,7 @@
     position: relative;
     overflow: hidden;
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(2px);
   }
   .final-letter::before {
     content: '';
@@ -566,7 +691,7 @@
     opacity: 1;
     pointer-events: all;
     background: rgba(14, 10, 8, 0.78);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(2px);
   }
   .poem-modal {
     width: min(560px, 92vw);
@@ -690,30 +815,6 @@
     opacity: 0.3;
   }
 
-  /* ============================================================
-     CUSTOM CURSOR — sunflower (desktop only)
-  ============================================================ */
-  @media (pointer: fine) {
-    html, body, * { cursor: none !important; }
-
-    #custom-cursor {
-      position: fixed;
-      top: 0; left: 0;
-      width: 28px; height: 28px;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-50%, -50%);
-      transition: opacity 0.3s ease;
-      opacity: 0;
-      will-change: left, top;
-    }
-    #custom-cursor.visible { opacity: 1; }
-    #custom-cursor.clicking svg {
-      transform: scale(0.78) rotate(30deg);
-      transition: transform 0.1s ease;
-    }
-  }
-
   /* Poem signature line */
   .poem-signature {
     display: block;
@@ -783,8 +884,8 @@
     display: none;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(6px);
-    transition: all 0.3s ease;
+    backdrop-filter: blur(2px);
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
     opacity: 1;
     z-index: 30;
   }
@@ -814,7 +915,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(6px);
+    backdrop-filter: blur(2px);
     transition: border-color 0.5s ease, color 0.5s ease, box-shadow 0.5s ease;
     opacity: 1;
     z-index: 30;
@@ -852,16 +953,20 @@
     opacity: 1;
     pointer-events: all;
     background: rgba(8, 4, 2, 0.92);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(2px);
   }
   .secret-box {
-    width: min(540px, 92vw);
+    width: min(580px, 92vw);
+    max-height: 88vh;
+    overflow-y: auto;
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 2.4rem 2rem 2rem;
     transform: scale(0.85) translateY(30px);
     opacity: 0;
     transition: transform 0.7s cubic-bezier(0.34,1.56,0.64,1), opacity 0.5s ease;
+    scrollbar-width: none;
   }
+  .secret-box::-webkit-scrollbar { display: none; }
   .secret-overlay.active .secret-box {
     transform: scale(1) translateY(0);
     opacity: 1;
@@ -903,6 +1008,115 @@
     transition: opacity 0.2s ease;
   }
   .secret-close:hover { opacity: 1; }
+
+  .secret-divider {
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201,169,110,0.4), transparent);
+    margin: 1.4rem auto;
+  }
+
+  .secret-long-text {
+    text-align: left;
+    max-height: 45vh;
+    overflow-y: auto;
+    padding-right: 0.6rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201,169,110,0.25) transparent;
+  }
+  .secret-long-text::-webkit-scrollbar { width: 3px; }
+  .secret-long-text::-webkit-scrollbar-track { background: transparent; }
+  .secret-long-text::-webkit-scrollbar-thumb { background: rgba(201,169,110,0.25); border-radius: 2px; }
+
+  .secret-long-text p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(0.88rem, 3vw, 1rem);
+    color: var(--cream);
+    line-height: 1.85;
+    opacity: 0.85;
+    margin-bottom: 1.1rem;
+    font-style: normal;
+  }
+  .secret-long-text p:first-child {
+    font-size: clamp(0.95rem, 3.2vw, 1.05rem);
+    color: var(--gold);
+    opacity: 0.9;
+    margin-bottom: 1.2rem;
+  }
+  /* ============================================================
+     REST MODE — dimmed countdown after 3 min of inactivity
+  ============================================================ */
+  #phase-wait.rest-mode .clock-number {
+    animation: none;
+    text-shadow: 0 0 8px rgba(201,169,110,0.3), 0 2px 8px rgba(0,0,0,0.5);
+    opacity: 0.35;
+    transition: opacity 2s ease, text-shadow 2s ease;
+  }
+  #phase-wait.rest-mode .label-for,
+  #phase-wait.rest-mode .countdown-phrase,
+  #phase-wait.rest-mode .tagline,
+  #phase-wait.rest-mode .clock-label,
+  #phase-wait.rest-mode .clock-progress-bar,
+  #phase-wait.rest-mode .open-btn,
+  #phase-wait.rest-mode .deco-line,
+  #phase-wait.rest-mode .corner,
+  #phase-wait.rest-mode::before,
+  #phase-wait.rest-mode::after {
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+  .rest-label {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(0.8rem, 3vw, 1rem);
+    color: var(--gold);
+    opacity: 0;
+    letter-spacing: 0.12em;
+    text-align: center;
+    pointer-events: none;
+    transition: opacity 2s ease;
+    animation: none;
+    white-space: nowrap;
+  }
+  /* Poem attribution — appears below signature */
+  .poem-attribution {
+    font-family: 'Raleway', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    color: var(--blush);
+    opacity: 0;
+    text-align: center;
+    margin-top: 0.6rem;
+    text-transform: uppercase;
+    transition: opacity 1s ease;
+  }
+  .poem-attribution.show { opacity: 0.38; }
+
+  /* Secret modal reading progress bar */
+  .secret-progress-bar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.06);
+    margin-bottom: 1rem;
+    border-radius: 1px;
+    overflow: hidden;
+    z-index: 1;
+  }
+  .secret-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, rgba(201,169,110,0.4), var(--gold));
+    border-radius: 1px;
+    transition: width 0.15s linear;
+    box-shadow: 0 0 6px rgba(201,169,110,0.4);
+  }
+</style>
 </style>
 </head>
 <body>
@@ -910,66 +1124,60 @@
 <!-- Shared background layers -->
 <div class="bg-layer"></div>
 <div class="bg-overlay"></div>
+<div id="time-tint"></div>
 <canvas id="particle-canvas"></canvas>
 <div id="bloom-overlay"></div>
 
-<!-- Custom cursor -->
-<div id="custom-cursor">
-  <svg viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
-    <!-- Petals -->
-    <g opacity="0.92">
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(0   14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(45  14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(90  14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(135 14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(180 14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(225 14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(270 14 14)"/>
-      <ellipse cx="14" cy="6"  rx="2.2" ry="4.5" fill="#c9a96e" transform="rotate(315 14 14)"/>
-    </g>
-    <!-- Center -->
-    <circle cx="14" cy="14" r="4.5" fill="#2a1f1a"/>
-    <circle cx="14" cy="14" r="3"   fill="#3d2e1e"/>
+<!-- Iris transition -->
+<div id="iris">
+  <svg viewBox="-1 -1 2 2" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="0" cy="0" r="1.5" fill="#0d0806"/>
   </svg>
 </div>
 
+<!-- Custom cursor -->
 <!-- ====================================================
      PHASE 1 — COUNTDOWN
 ==================================================== -->
 <div id="phase-wait">
-  <p class="label-for">para Samantha</p>
 
-  <!-- Natural language countdown phrase -->
-  <p class="countdown-phrase" id="countdown-phrase"></p>
+  <!-- Corner ornaments -->
+  <span class="corner corner-tl"></span>
+  <span class="corner corner-tr"></span>
+  <span class="corner corner-bl"></span>
+  <span class="corner corner-br"></span>
+
+  <p class="label-for">para Samantha</p>
 
   <div class="clock-wrapper">
     <div class="clock-unit">
       <span class="clock-number" id="cd-days">00</span>
       <span class="clock-label">días</span>
     </div>
-    <span class="clock-sep">:</span>
     <div class="clock-unit">
       <span class="clock-number" id="cd-hours">00</span>
       <span class="clock-label">horas</span>
     </div>
-    <span class="clock-sep">:</span>
     <div class="clock-unit">
       <span class="clock-number" id="cd-mins">00</span>
       <span class="clock-label">minutos</span>
     </div>
-    <span class="clock-sep">:</span>
     <div class="clock-unit">
       <span class="clock-number" id="cd-secs">00</span>
       <span class="clock-label">segundos</span>
     </div>
   </div>
 
+  <div class="clock-progress-bar"><div class="clock-progress-fill" id="clock-progress-fill"></div></div>
+
+  <p class="countdown-phrase" id="countdown-phrase"></p>
+
   <div class="deco-line"></div>
 
   <p class="tagline">Este mensaje fue preparado con mucho cariño<br>solo podrás abrirlo en tu día especial.</p>
 
-  <!-- Button that appears when countdown ends -->
   <button class="open-btn" id="open-btn" onclick="launchPhase2()">Abrir ✦</button>
+  <span class="rest-label" id="rest-label">toca la pantalla para continuar</span>
 </div>
 
 <!-- ====================================================
@@ -1025,6 +1233,7 @@
           <path id="sig-path" d="M4,12 C20,4 40,18 65,10 C90,2 110,16 140,8 C170,0 195,16 225,9 C250,3 270,14 296,8"/>
         </svg>
       </span>
+      <p class="poem-attribution" id="poem-attribution"></p>
     </div>
   </div>
 </div>
@@ -1033,16 +1242,21 @@
 <div class="secret-overlay" id="secret-overlay" tabindex="-1">
   <div class="secret-box">
     <span class="secret-star">✦</span>
-    <p class="secret-title">Solo para ti, Sam</p>
+    <p class="secret-title">Leíste todo. Gracias.</p>
     <p class="secret-text">
-      Llegaste al final de todo esto, y eso me dice algo de ti:<br>
-      que no te quedas a medias, que le das valor a las cosas que alguien<br>
-      construyó con cariño. Gracias por leer cada letra.<br><br>
-      Este espacio secreto es solo tuyo. Un lugar que existe<br>
-      porque me importa que sepas, con toda certeza,<br>
-      que eres una de las personas más especiales en mi vida.<br><br>
-      Te quiero, Samantha. Siempre.
+      Que hayas llegado hasta aquí dice algo bonito de ti: le das valor a lo que alguien construyó con cariño. Este último rincón es solo tuyo.
     </p>
+    <div class="secret-divider"></div>
+    <div class="secret-long-text" id="secret-long-text">
+      <div class="secret-progress-bar"><div class="secret-progress-fill" id="secret-progress-fill"></div></div>
+      <p><strong>¿Quién es Samantha según yo?</strong></p>
+      <p>Quizás, a día de hoy, mi mejor amiga; alguien en quien depositar una confianza ciega. Es una persona sumamente inteligente y capaz, aunque a veces caiga en contradicciones propias de la inmadurez; días en los que sus decisiones me parecen ingenuas, casi absurdas, y otros días donde demuestra una lucidez brillante, logrando profundizar en las charlas con una madurez admirable. Sé con certeza que es alguien dedicada, pero más que eso, es alguien extraordinariamente capaz.</p>
+      <p>Al final, como toda naturaleza humana, el ser que conocí en Samantha me genera cierta extrañeza; es difícil expresarlo en palabras. La conocí como una niña brillante y enfocada, movida por un impulso que en su momento no alcancé a comprender y sobre el cual solo tracé un par de hipótesis. Más adelante, me di cuenta de que no era tan diferente a mí (con la única salvedad de que mi procrastinación estaba en otro nivel).</p>
+      <p>Al transcurrir un año, mi percepción sobre ella cambió drásticamente, al igual que cambió ella misma debido a los golpes de la vida; algunos que pudo haberse ahorrado con un poco más de voluntad, y otros que eran simplemente inevitables. Sucedieron para bien o para mal, y solo espero que hayan dejado un aprendizaje en ella.</p>
+      <p>Desde mi perspectiva, su manera de querer y de ejecutar ese sentimiento estuvo mal encauzada. A pesar de que no sé —ni me imagino— qué cruzaba por su mente en aquellos días, sostengo que no fue lo correcto: te hubieses ahorrado muchas penas y martirios de haber tenido más firmeza. Quizás buscabas un refugio en una estructura que ya se había derrumbado; quizás la introducción de esa historia te cegó tanto que te negabas a aceptar un final que terminó alargándose de manera innecesaria. Quiero pensar que no fue tan grave, y que solo era parte de su proceso de sanar. También recuerdo el día en que perdió algo que estoy seguro era sumamente valioso para ella. Poco después de ese suceso, ilustré en mi mente la imagen de una silla mecedora bañada por una luz tenue, un objeto que habitaba en sus mejores recuerdos pero que terminó opacado por una nube negra nacida de su propio refugio.</p>
+      <p>Hoy en día, con una perspectiva más clara, profundizar en ese pasado me causa un malestar profundo. Me duele pensar que estuvo tan rota mental y emocionalmente, tan cegada por un ser que aseguraba conocer la diferencia entre el odio y el amor, lo cual resulta decepcionante. Considero que hubo un alto grado de insensatez en ambas partes: por un lado, alguien que desechó algo grandioso, reduciéndolo a un plano meramente físico y despojándolo de su valor real; por el otro, ella, quedándose a resistir aun sabiendo que nada iba a cambiar, perdiendo en el proceso su dignidad y gran parte de su amor propio. Intento buscar argumentos para defender su postura en ese entonces y no encuentro forma. Tal vez la justificación sea que era joven, pero para mí la juventud no es una excusa válida, ni creo que exista una. Tal vez solo intentaba recoger las cenizas de una llama que los vientos de la verdad ya habían extinguido hacía tiempo. Sé que no era tu mejor momento, y creo que cuando te diste cuenta de la realidad, ya era demasiado tarde; arrastrabas un peso en los pies que te impedía avanzar. A día de hoy, no sé qué tanta carga te quede por soltar, pero tengo la certeza de que ya has dejado atrás la mayor parte de lo que te ataba. No escribo esto con un enfoque pesimista, ni mucho menos.</p>
+      <p>Al final, no sé con certeza cómo quedará el mensaje que quería transmitir en un inicio o si lograré hacerlo bien. Muchas veces escribo sin un rumbo aparente, inventando la estructura sobre la marcha, recopilando fragmentos de la memoria que llegan de forma casual para dar vida a estas líneas. Solo espero que todo marche bien con este proyecto, ya que, además de ser un espacio dedicado a ti, ha sido el territorio donde ejercí lo que sé de mi carrera y donde aprendí lo que aún no sabía. De nuevo, gracias por ser tú.</p>
+    </div>
     <button class="secret-close" onclick="closeSecret()">cerrar ✦</button>
   </div>
 </div>
@@ -1053,7 +1267,7 @@
      Cambiar a `true` para saltarse el contador y ver la Fase 2
      directamente. Recuerda ponerlo en `false` antes de enviárselo.
   ============================================================ */
-  const DEBUG_MODE =false;
+  const DEBUG_MODE = false;
 
   /* ============================================================
      TARGET DATE — 25 de agosto de este año a las 7:00 AM
@@ -1064,27 +1278,47 @@
      MESSAGES — Cada tap avanza un elemento de este arreglo
   ============================================================ */
   const messages = [
-    { text: "Hay personas que llegan sin hacer ruido y, de repente, lo cambian todo. Tú llegaste así.", style: "" },
-    { text: "Este año se fue rápido, y hubo días en los que no estuve tan presente como quería. Eso lo siento.", style: "" },
-    { text: "Aun así, cada detalle tuyo quedó en mi memoria: tu risa, tu forma de escuchar y esa honestidad que te define.", style: "" },
-    { text: "Cuando pienso en ti, pienso en girasoles: insistiendo en la luz incluso cuando las nubes están ahí.", style: "" },
-    { text: "Gracias por ser esa persona capaz de hacer el mundo un poco más liviano solo con estar.", style: "" },
-    { text: "Me gusta cómo te preocupas, cómo defiendes lo que te importa y cómo haces que todo sea más fácil de llevar.", style: "" },
-    { text: "No siempre digo lo suficiente, pero quiero que sepas que en mis mejores recuerdos estás tú.", style: "" },
-    { text: "Me alegra haber encontrado una amistad tan cálida, honesta y especial como la nuestra.", style: "" },
-    { text: "Te quiero mucho. Y deseo con todo que cada sueño tuyo crezca como un girasol hacia algo mejor.", style: "" },
-    { text: "Hoy solo quiero agradecerte por ser tú, por esos pequeños grandes momentos y por dejarme estar cerca.", style: "" },
+    // ── Apertura ─────────────────────────────────────────────────
+    { text: "Sam", style: "msg-swift" },
+    { text: "Hay presencias que no necesitan anunciarse con estridencia.", style: "" },
+    { text: "Llegan como el sol de la tarde, transformando el paisaje de manera silenciosa pero absoluta.", style: "" },
+
+    // ── Disculpa ──────────────────────────────────────────────────
+    { text: "Sé que las agujas del reloj han girado con demasiada prisa últimamente.", style: "" },
+    { text: "Y que en la marea de los días, hubo espacios donde mi ausencia pesó más de lo que hubiese querido.", style: "" },
+    { text: "Por los momentos en que la distancia ganó terreno, de corazón, lo siento.", style: "" },
+    { text: "Sin embargo, la memoria tiene una lealtad intacta.", style: "" },
+    { text: "Tu risa, tu manera tan honesta de sostener la mirada cuando escuchas y la firmeza de tu carácter se quedaron resguardadas aquí.", style: "" },
+
+    // ── Admiración ───────────────────────────────────────────────
+    { text: "Hay en ti una hermosa ebanistería interna.", style: "" },
+    { text: "Una insistencia inquebrantable por buscar la luz y orientarte hacia ella, incluso cuando el cielo insiste en llenarse de nubes.", style: "" },
+    { text: "Admiro cómo te preocupas por lo que amas, la madurez con la que defiendes tus verdades.", style: "" },
+    { text: "Y esa virtud tan tuya de restarle peso al mundo, haciéndolo un lugar más liviano y habitable con el simple hecho de existir en él.", style: "" },
+
+    // ── Gratitud ─────────────────────────────────────────────────
+    { text: "Quizás mis palabras no siempre alcancen a rozar la superficie de lo que siento.", style: "" },
+    { text: "Pero en el inventario de mis recuerdos más puros y felices, tu nombre ocupa un espacio central.", style: "" },
+    { text: "Encontrar una amistad tan cálida, desinteresada y real es un hallazgo que atesoro en silencio.", style: "" },
+    { text: "Te quiero muchísimo, Sam.", style: "msg-swift" },
+    { text: "Y mi deseo más profundo es que tus anhelos sigan esa misma inercia del girasol: que crezcan altos, firmes y siempre apuntando hacia horizontes mejores.", style: "" },
 
     // ── Cierre ───────────────────────────────────────────────────
-    { text: "Tal vez no sea tu persona favorita, pero sí quiero ser de las que no fallan.", style: "" },
-    { text: "Cuando sientas que todo se cae y necesites a alguien que simplemente esté, aquí voy a estar.", style: "" },
-    { text: "Sin preguntas. Sin condiciones. Siempre estaré del lado donde brilla la luz.", style: "" },
-    { text: "Feliz cumpleaños, Samantha. Gracias por ser como eres.", style: "" },
+    { text: "Hoy elijo detener el tiempo y las prisas cotidianas para darte las gracias.", style: "" },
+    { text: "Gracias por la tregua de tu compañía, por los instantes compartidos y por otorgarme el privilegio de estar cerca de tu luz.", style: "" },
+    { text: "No pretendo disputar un lugar en la lista de tus personas favoritas.", style: "" },
+    { text: "Pero sí asumo el pacto consciente de ser de los pocos que jamás te van a fallar.", style: "" },
+    { text: "Cuando los días se tornen volátiles, cuando el entorno pese y el ruido exterior te abrume, búscame.", style: "" },
+    { text: "No habrá interrogatorios incómodos, ni condiciones que cumplir.", style: "" },
+    { text: "Solo un silencio compartido y la certeza absoluta de que me encontrarás siempre en el mismo sitio:", style: "" },
+    { text: "el lado donde el sol vuelve a salir para ti.", style: "msg-swift" },
+    { text: "Feliz cumpleaños, Samantha. Gracias por ser tú.", style: "msg-swift" },
   ];
 
   const acrosticPoems = {
     S: {
       color: '#c9a96e',
+      attribution: 'inspirado en Oliverio Girondo',
       lines: [
         { initial: 'S', rest: 'iempre hay un instante en que los ojos se detienen y el ruido del mundo calla.' },
         { initial: 'T', rest: 'ú eres ese instante, una calma que no pide permiso pero que lo inunda todo con su autenticidad.' },
@@ -1095,6 +1329,7 @@
     },
     A1: {
       color: '#e8c4b0',
+      attribution: 'inspirado en Mario Benedetti',
       lines: [
         { initial: 'A', rest: ' veces la vida es tan compleja como un laberinto,' },
         { initial: 'p', rest: 'ero tu presencia en mis días es la certeza a la que siempre da gusto volver.' },
@@ -1105,6 +1340,7 @@
     },
     M: {
       color: '#c47a6a',
+      attribution: 'inspirado en Pablo Neruda',
       lines: [
         { initial: 'M', rest: 'e importa tu universo entero: tus risas que iluminan, tus metas y también esos días grises en los que las alas pesan un poco más.' },
         { initial: 'Q', rest: 'uiero que lleves contigo la certeza absoluta de que,' },
@@ -1115,6 +1351,7 @@
     },
     A2: {
       color: '#e8c4b0',
+      attribution: 'inspirado en Julio Cortázar',
       lines: [
         { initial: 'A', rest: 'preciarte es como descubrir un poema que no sabías que necesitabas leer.' },
         { initial: 'H', rest: 'e aprendido a querer tu forma de ser, esa madurez transparente' },
@@ -1125,6 +1362,7 @@
     },
     N: {
       color: '#b0c4d8',
+      attribution: 'escrito con gratitud',
       lines: [
         { initial: 'N', rest: 'o existen las casualidades en el mapa del destino;' },
         { initial: 'l', rest: 'as personas correctas llegan en el momento preciso.' },
@@ -1135,6 +1373,7 @@
     },
     T: {
       color: '#a8c4a2',
+      attribution: 'escrito con certeza',
       lines: [
         { initial: 'T', rest: 'engo la seguridad de que los hilos que nos unen a las personas verdaderas' },
         { initial: 'n', rest: 'o se cortan con la distancia ni se desgastan con el reloj.' },
@@ -1145,6 +1384,7 @@
     },
     H: {
       color: '#d4a8c7',
+      attribution: 'inspirado en Alejandra Pizarnik',
       lines: [
         { initial: 'H', rest: 'abitar los días sabiendo que existes es como encontrar un refugio de cristal en medio de la tormenta.' },
         { initial: 'T', rest: 'ienes una fortaleza suave, una calidez que merece ser resguardada del frío del exterior.' },
@@ -1155,6 +1395,7 @@
     },
     A3: {
       color: '#e8c4b0',
+      attribution: 'escrito desde el corazón',
       lines: [
         { initial: 'A', rest: 'l final, cuando la jornada termina y el silencio se adueña de la noche,' },
         { initial: 'l', rest: 'o que queda es la gratitud por las almas que hacen que el viaje valga la pena.' },
@@ -1166,8 +1407,39 @@
   };
 
   /* ============================================================
-     STATE
+     DOM CACHE — query once, reuse everywhere
   ============================================================ */
+  const $ = id => document.getElementById(id);
+  const DOM = {
+    days:         $('cd-days'),
+    hours:        $('cd-hours'),
+    mins:         $('cd-mins'),
+    secs:         $('cd-secs'),
+    phrase:       $('countdown-phrase'),
+    progressFill: $('clock-progress-fill'),
+    openBtn:      $('open-btn'),
+    phaseWait:    $('phase-wait'),
+    phaseMsg:     $('phase-msg'),
+    progressDots: $('progress-dots'),
+    endScreen:    $('end-screen'),
+    bgLayer:      document.querySelector('.bg-layer'),
+    bgOverlay:    document.querySelector('.bg-overlay'),
+    msgText:      $('msg-text'),
+    tapHint:      $('tap-hint'),
+    memeTapHint:  $('meme-tap-hint'),
+    memeLayer:    $('meme-layer'),
+    replayBtn:    $('replay-btn'),
+    secretBtn:    $('secret-btn'),
+    poemOverlay:  $('poem-overlay'),
+    poemLetter:   $('poem-letter'),
+    poemText:     $('poem-text'),
+    poemModal:    document.querySelector('.poem-modal'),
+    sigPath:      $('sig-path'),
+    poemCounter:  $('poem-counter'),
+    secretOverlay:$('secret-overlay'),
+    canvas:       $('particle-canvas'),
+    restLabel:    $('rest-label'),
+  };
   let currentIndex = -1;
   let isAnimating   = false;
   let phase2Active  = false;
@@ -1202,44 +1474,54 @@
   ============================================================ */
   function pad(n) { return String(n).padStart(2, '0'); }
 
+  let lastSecs = -1;
   function updateClock() {
     const now  = Date.now();
     const diff = TARGET.getTime() - now;
 
     if (diff <= 0 || DEBUG_MODE) {
       clearInterval(clockInterval);
-      document.getElementById('open-btn').classList.add('show');
+      DOM.openBtn.classList.add('show');
       if (diff <= 0) {
-        ['cd-days','cd-hours','cd-mins','cd-secs'].forEach(id => {
-          document.getElementById(id).textContent = '00';
-        });
-        const phraseEl = document.getElementById('countdown-phrase');
-        if (phraseEl) phraseEl.textContent = '¡Tu día ha llegado, Samantha! ✦';
+        DOM.days.textContent = DOM.hours.textContent =
+        DOM.mins.textContent = DOM.secs.textContent = '00';
+        if (DOM.phrase) DOM.phrase.textContent = '¡Tu día ha llegado, Samantha! ✦';
       }
       return;
     }
 
     const totalSecs = Math.floor(diff / 1000);
+    if (totalSecs === lastSecs) return; // skip if nothing changed
+    lastSecs = totalSecs;
+
     const days  = Math.floor(totalSecs / 86400);
     const hours = Math.floor((totalSecs % 86400) / 3600);
     const mins  = Math.floor((totalSecs % 3600) / 60);
     const secs  = totalSecs % 60;
 
-    document.getElementById('cd-days').textContent  = pad(days);
-    document.getElementById('cd-hours').textContent = pad(hours);
-    document.getElementById('cd-mins').textContent  = pad(mins);
-    document.getElementById('cd-secs').textContent  = pad(secs);
+    DOM.days.textContent  = pad(days);
+    DOM.hours.textContent = pad(hours);
+    DOM.mins.textContent  = pad(mins);
+    DOM.secs.textContent  = pad(secs);
 
-    // Natural language phrase
-    const phraseEl = document.getElementById('countdown-phrase');
-    if (phraseEl) {
+    // Progress bar — updated only once per minute is enough
+    if (secs === 0 || DOM.progressFill.style.width === '') {
+      const START = new Date('2025-06-01T00:00:00');
+      const totalWait = TARGET.getTime() - START.getTime();
+      const elapsed   = now - START.getTime();
+      const pct = Math.min(100, Math.max(0, (elapsed / totalWait) * 100));
+      DOM.progressFill.style.width = pct + '%';
+    }
+
+    // Natural language phrase — update only when minutes change
+    if (DOM.phrase) {
       const parts = [];
       if (days  > 0) parts.push(`${days} ${days  === 1 ? 'día'    : 'días'}`);
       if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hora'   : 'horas'}`);
       if (mins  > 0) parts.push(`${mins} ${mins   === 1 ? 'minuto' : 'minutos'}`);
       if (days === 0 && hours === 0 && mins === 0)
         parts.push(`${secs} ${secs === 1 ? 'segundo' : 'segundos'}`);
-      phraseEl.textContent = `faltan ${parts.join(', ')} para tu día ✦`;
+      DOM.phrase.textContent = `faltan ${parts.join(', ')} para tu día ✦`;
     }
   }
 
@@ -1285,20 +1567,35 @@
       if (!running) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Spawn
-      if (Math.random() < 0.35) particles.push(createParticle());
+      // Spawn — reduced rate, hard cap
+      if (particles.length < 40 && Math.random() < 0.18) particles.push(createParticle());
 
-      particles = particles.filter(p => p.life < p.maxLife);
-      particles.forEach(p => {
-        p.x += p.vx + Math.sin(p.life * 0.02) * 0.3;
+      // Filter dead particles
+      let live = [];
+      for (let i = 0; i < particles.length; i++) {
+        if (particles[i].life < particles[i].maxLife) live.push(particles[i]);
+      }
+      particles = live;
+
+      // Batch by color to minimize fillStyle changes
+      const gold = [], blush = [];
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
         p.y += p.vy;
         p.life++;
-        const progress = p.life / p.maxLife;
-        const alpha = p.alpha * (1 - progress * progress);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${p.color},${alpha})`;
-        ctx.fill();
+        if (p.color === '201,169,110') gold.push(p); else blush.push(p);
+      }
+
+      [{ list: gold, base: '201,169,110' }, { list: blush, base: '232,196,176' }].forEach(({ list, base }) => {
+        for (let i = 0; i < list.length; i++) {
+          const p = list[i];
+          const alpha = p.alpha * (1 - (p.life / p.maxLife) ** 2);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${base},${alpha.toFixed(2)})`;
+          ctx.fill();
+        }
       });
 
       requestAnimationFrame(tick);
@@ -1336,22 +1633,23 @@
      PHASE 2 LAUNCH
   ============================================================ */
   function launchPhase2() {
+    // Iris transition
+    const iris = document.getElementById('iris');
+    iris.style.opacity = '1';
+    iris.classList.add('open');
+
     triggerBloom();
     startParticles();
 
-    // Fade out Phase 1
-    const waitEl = document.getElementById('phase-wait');
-    waitEl.classList.add('hidden');
+    DOM.phaseWait.classList.add('hidden');
 
     setTimeout(() => {
-      waitEl.style.display = 'none';
+      iris.style.opacity = '0';
+      iris.classList.remove('open');
+      DOM.phaseWait.style.display = 'none';
+      DOM.bgLayer.classList.add('message-bg');
 
-      // Cambiar al fondo de mensajes después del contador
-      const bgEl = document.querySelector('.bg-layer');
-      bgEl.classList.add('message-bg');
-
-      // Build progress dots
-      const dotsEl = document.getElementById('progress-dots');
+      const dotsEl = DOM.progressDots;
       messages.forEach((_, i) => {
         const d = document.createElement('div');
         d.className = 'dot';
@@ -1360,12 +1658,8 @@
       });
       dotsEl.classList.add('active');
 
-      // Activate phase 2
-      const msgEl = document.getElementById('phase-msg');
-      msgEl.classList.add('active');
+      DOM.phaseMsg.classList.add('active');
       phase2Active = true;
-
-      // Show first message automatically
       showNext();
     }, 1200);
   }
@@ -1408,17 +1702,13 @@
     if (nextMsg.style === 'msg-meme' && !inMemePhase) {
       inMemePhase = true;
       inSwiftPhase = false;
-      // Hide normal message stage
-      const textEl = document.getElementById('msg-text');
-      const hintEl = document.getElementById('tap-hint');
-      textEl.classList.remove('visible');
-      textEl.classList.add('exit');
-      hintEl.style.opacity = '0';
-      document.getElementById('meme-tap-hint').classList.add('show');
+      DOM.msgText.classList.remove('visible');
+      DOM.msgText.classList.add('exit');
+      DOM.tapHint.style.opacity = '0';
+      DOM.memeTapHint.classList.add('show');
       setTimeout(() => {
         currentIndex++;
         spawnMemeBubble(messages[currentIndex]);
-        // Inicia auto-avance cada 3.5 segundos en la fase de memes
         startAutoMemeAdvance();
       }, 600);
       return;
@@ -1428,13 +1718,9 @@
     if (inMemePhase && nextMsg.style !== 'msg-meme') {
       inMemePhase = false;
       stopAutoMemeAdvance();
-      document.getElementById('meme-tap-hint').classList.remove('show');
-      
-      // Cambiar al fondo final
-      const bgEl = document.querySelector('.bg-layer');
-      bgEl.classList.remove('message-bg');
-      bgEl.classList.add('end-bg');
-      
+      DOM.memeTapHint.classList.remove('show');
+      DOM.bgLayer.classList.remove('message-bg');
+      DOM.bgLayer.classList.add('end-bg');
       clearAllMemes(() => {
         currentIndex++;
         renderNormalMessage();
@@ -1447,72 +1733,71 @@
       isAnimating = true;
       currentIndex++;
       spawnMemeBubble(messages[currentIndex]);
-      document.getElementById('dot-' + currentIndex)?.classList.add('done');
+      $('dot-' + currentIndex)?.classList.add('done');
       setTimeout(() => { isAnimating = false; }, 600);
       return;
     }
 
     // Normal / Swift messages
     isAnimating = true;
-    const textEl = document.getElementById('msg-text');
-    const hintEl = document.getElementById('tap-hint');
-
     if (currentIndex >= 0) {
-      textEl.classList.remove('visible');
-      textEl.classList.add('exit');
-      setTimeout(() => {
-        currentIndex++;
-        renderNormalMessage();
-      }, 600);
+      DOM.msgText.classList.remove('visible');
+      DOM.msgText.classList.add('exit');
+      setTimeout(() => { currentIndex++; renderNormalMessage(); }, 600);
     } else {
       currentIndex++;
       renderNormalMessage();
     }
   }
 
+  // Index where the closing section starts (0-based)
+  const CIERRE_START = 17;
+
   function renderNormalMessage() {
-    const msg    = messages[currentIndex];
-    const textEl = document.getElementById('msg-text');
-    const hintEl = document.getElementById('tap-hint');
-    const phaseEl = document.getElementById('phase-msg');
+    const msg = messages[currentIndex];
+    DOM.phaseMsg.classList.add('active');
 
-    // Make sure phase-msg is visible
-    phaseEl.classList.add('active');
+    // Haptic feedback on each new message (mobile only)
+    if (navigator.vibrate) navigator.vibrate(22);
 
-    // Reset classes
-    textEl.className = 'msg-line';
-    if (msg.style) textEl.classList.add(msg.style);
-    textEl.innerHTML = '';
+    // Switch to end background when reaching the closing section
+    if (currentIndex === CIERRE_START) {
+      DOM.bgLayer.classList.remove('message-bg');
+      DOM.bgLayer.classList.add('end-bg');
+    }
+
+    // Adaptive typing speed — swift messages faster, long ones slower
+    const len = msg.text.length;
+    const isSwift = msg.style === 'msg-swift';
+    const speed = isSwift ? 14 : len > 120 ? 20 : len > 60 ? 24 : 28;
+
+    DOM.msgText.className = 'msg-line';
+    if (msg.style) DOM.msgText.classList.add(msg.style);
+    DOM.msgText.innerHTML = '';
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        textEl.classList.add('visible');
-        typeText(textEl, msg.text, 0, () => {
-          document.getElementById('dot-' + currentIndex)?.classList.add('done');
+        DOM.msgText.classList.add('visible');
+        typeText(DOM.msgText, msg.text, 0, () => {
+          $('dot-' + currentIndex)?.classList.add('done');
           const isLast = currentIndex === messages.length - 1;
-          hintEl.style.opacity = isLast ? '0' : '1';
+          DOM.tapHint.style.opacity = isLast ? '0' : '1';
           isAnimating = false;
-        });
+        }, speed);
       });
     });
   }
 
-  function typeText(element, text, index, callback) {
-    const nextChar = text[index];
-
-    if (index >= text.length) {
-      callback();
-      return;
-    }
-
-    if (nextChar === '/') {
+  function typeText(element, text, index, callback, speed) {
+    if (index >= text.length) { callback(); return; }
+    const ch = text[index];
+    if (ch === '/') {
       element.innerHTML += '<br>';
-      typeText(element, text, index + 1, callback);
+      typeText(element, text, index + 1, callback, speed);
       return;
     }
-
-    element.innerHTML += nextChar;
-    setTimeout(() => typeText(element, text, index + 1, callback), 28);
+    element.innerHTML += ch;
+    setTimeout(() => typeText(element, text, index + 1, callback, speed), speed);
   }
 
   /* ── Auto-advance helper para memes ──────────────────────────── */
@@ -1537,7 +1822,7 @@
 
   /* ── Meme bubble helpers ─────────────────────────────────────── */
   function spawnMemeBubble(msg) {
-    const layer = document.getElementById('meme-layer');
+    const layer = DOM.memeLayer;
     const pos   = memePositions[memePositionIndex % memePositions.length];
     memePositionIndex++;
 
@@ -1581,206 +1866,233 @@
   }
 
   function showEnd() {
-    const msgEl  = document.getElementById('phase-msg');
-    const dotsEl = document.getElementById('progress-dots');
-    const endEl  = document.getElementById('end-screen');
-    const bgEl   = document.querySelector('.bg-layer');
-    const overlayEl = document.querySelector('.bg-overlay');
-
-    msgEl.style.opacity  = '0';
-    dotsEl.style.opacity = '0';
-
-    bgEl.classList.remove('message-bg');
-    bgEl.classList.add('end-bg');
-    overlayEl.classList.add('glow');
-
+    DOM.phaseMsg.style.opacity  = '0';
+    DOM.progressDots.style.opacity = '0';
+    DOM.bgLayer.classList.remove('message-bg');
+    DOM.bgLayer.classList.add('end-bg');
+    DOM.bgOverlay.classList.add('glow');
     phase2Active = false;
     saveSession('end', null);
-
+    // Mark as completed so returning visits go straight to the acrostic
+    try { localStorage.setItem('sam_completed', '1'); } catch(e) {}
     setTimeout(() => {
-      msgEl.style.display  = 'none';
-      dotsEl.style.display = 'none';
-      endEl.classList.add('active');
-      // Show corner buttons
-      document.getElementById('replay-btn').classList.add('show');
-      document.getElementById('secret-btn').classList.add('show');
+      DOM.phaseMsg.style.display  = 'none';
+      DOM.progressDots.style.display = 'none';
+      DOM.endScreen.classList.add('active');
+      DOM.replayBtn.classList.add('show');
+      DOM.secretBtn.classList.add('show');
       updatePoemCounter();
     }, 1200);
   }
 
   /* ---- Poem counter & secret unlock ---- */
   function updatePoemCounter() {
-    const counter   = document.getElementById('poem-counter');
-    const secretBtn = document.getElementById('secret-btn');
-    if (!counter) return;
+    if (!DOM.poemCounter) return;
     const n = poemsRead.size;
     if (n === TOTAL_POEMS) {
-      counter.textContent = '✦ leíste todos los poemas ✦';
-      counter.classList.add('all-done');
-      // Unlock the secret button
-      if (secretBtn) {
-        secretBtn.classList.add('unlocked');
-        secretBtn.disabled = false;
-        secretBtn.onclick  = openSecret;
+      DOM.poemCounter.textContent = '✦ leíste todos los poemas ✦';
+      DOM.poemCounter.classList.add('all-done');
+      if (DOM.secretBtn) {
+        DOM.secretBtn.classList.add('unlocked');
+        DOM.secretBtn.disabled = false;
+        DOM.secretBtn.onclick  = openSecret;
       }
     } else {
-      counter.textContent = `${n} / ${TOTAL_POEMS} poemas leídos`;
-      counter.classList.remove('all-done');
+      DOM.poemCounter.textContent = `${n} / ${TOTAL_POEMS} poemas leídos`;
+      DOM.poemCounter.classList.remove('all-done');
     }
   }
 
   function openSecret() {
-    const overlay = document.getElementById('secret-overlay');
-    overlay.classList.add('active');
-    overlay.focus();
+    DOM.secretOverlay.classList.add('active');
+    DOM.secretOverlay.focus();
   }
 
   function closeSecret() {
-    document.getElementById('secret-overlay').classList.remove('active');
+    DOM.secretOverlay.classList.remove('active');
   }
 
   /* ---- Replay messages ---- */
   function replayMessages() {
-    const endEl  = document.getElementById('end-screen');
-    const msgEl  = document.getElementById('phase-msg');
-    const dotsEl = document.getElementById('progress-dots');
-    const bgEl   = document.querySelector('.bg-layer');
-
-    // Reset to message phase visuals
-    endEl.classList.remove('active');
-    bgEl.classList.remove('end-bg');
-    bgEl.classList.add('message-bg');
-    document.querySelector('.bg-overlay').classList.remove('glow');
-
-    msgEl.style.display = '';
-    msgEl.style.opacity = '1';
-    dotsEl.style.display = '';
-    dotsEl.style.opacity = '1';
-
-    // Reset message index and dots
+    DOM.endScreen.classList.remove('active');
+    DOM.bgLayer.classList.remove('end-bg');
+    DOM.bgLayer.classList.add('message-bg');
+    DOM.bgOverlay.classList.remove('glow');
+    DOM.phaseMsg.style.display = '';
+    DOM.phaseMsg.style.opacity = '1';
+    DOM.progressDots.style.display = '';
+    DOM.progressDots.style.opacity = '1';
     currentIndex = -1;
     document.querySelectorAll('.dot').forEach(d => d.classList.remove('active','done'));
-
     phase2Active = true;
     saveSession('messages', 0);
     showNext();
   }
 
   function openPoem(key) {
-    const poem = acrosticPoems[key];
-    const overlay = document.getElementById('poem-overlay');
-    const letterEl = document.getElementById('poem-letter');
-    const textEl = document.getElementById('poem-text');
-    const modalEl = overlay.querySelector('.poem-modal');
-
-    // Set accent color
+    const poem  = acrosticPoems[key];
     const color = poem ? poem.color : '#c9a96e';
-    modalEl.style.setProperty('--poem-accent', color);
 
-    letterEl.textContent = key[0];
+    DOM.poemModal.style.setProperty('--poem-accent', color);
+    DOM.poemLetter.textContent = key[0];
+    DOM.sigPath.classList.remove('draw');
+    DOM.poemText.innerHTML = '';
 
-    // Reset signature
-    const sigPath = document.getElementById('sig-path');
-    sigPath.classList.remove('draw');
-
-    // Build line-by-line acrostic HTML
-    textEl.innerHTML = '';
     if (poem && poem.lines) {
       const divider = document.createElement('div');
       divider.className = 'poem-divider';
-      textEl.appendChild(divider);
+      DOM.poemText.appendChild(divider);
 
       poem.lines.forEach((line, i) => {
         const lineEl = document.createElement('div');
         lineEl.className = 'poem-acro-line';
         lineEl.textContent = line.initial + line.rest;
-        textEl.appendChild(lineEl);
-
-        // Staggered reveal
+        DOM.poemText.appendChild(lineEl);
         setTimeout(() => lineEl.classList.add('reveal'), 380 + i * 140);
       });
 
-      // Draw signature after all lines have appeared
       const totalDelay = 380 + poem.lines.length * 140 + 200;
-      setTimeout(() => sigPath.classList.add('draw'), totalDelay);
+      setTimeout(() => DOM.sigPath.classList.add('draw'), totalDelay);
     } else {
-      textEl.textContent = 'Este poema aún está en camino.';
-      setTimeout(() => sigPath.classList.add('draw'), 600);
+      DOM.poemText.textContent = 'Este poema aún está en camino.';
+      setTimeout(() => DOM.sigPath.classList.add('draw'), 600);
     }
 
-    overlay.classList.add('active');
-    overlay.focus();
-
-    // Track read & update counter
+    DOM.poemOverlay.classList.add('active');
+    DOM.poemOverlay.focus();
     poemsRead.add(key);
     updatePoemCounter();
+
+    // Show attribution after signature finishes drawing
+    const attrEl = document.getElementById('poem-attribution');
+    if (attrEl) {
+      attrEl.textContent = poem && poem.attribution ? poem.attribution : '';
+      attrEl.classList.remove('show');
+      if (poem && poem.attribution) {
+        const attrDelay = 380 + (poem.lines ? poem.lines.length * 140 : 0) + 1400;
+        setTimeout(() => attrEl.classList.add('show'), attrDelay);
+      }
+    }
   }
 
   function closePoem() {
-    const overlay = document.getElementById('poem-overlay');
-    overlay.classList.remove('active');
-    // Reset reveal classes and signature after transition
+    DOM.poemOverlay.classList.remove('active');
     setTimeout(() => {
-      overlay.querySelectorAll('.poem-acro-line').forEach(el => el.classList.remove('reveal'));
-      document.getElementById('sig-path').classList.remove('draw');
+      DOM.poemOverlay.querySelectorAll('.poem-acro-line').forEach(el => el.classList.remove('reveal'));
+      DOM.sigPath.classList.remove('draw');
+      const attrEl = document.getElementById('poem-attribution');
+      if (attrEl) attrEl.classList.remove('show');
     }, 500);
   }
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closePoem();
-      closeSecret();
-    }
+    if (event.key === 'Escape') { closePoem(); closeSecret(); }
   });
 
-  // Save state when user hides/closes the tab
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (phase2Active) saveSession('messages', currentIndex);
-    }
+    if (document.hidden && phase2Active) saveSession('messages', currentIndex);
   });
 
-  document.getElementById('poem-overlay').addEventListener('click', (event) => {
-    if (event.target === event.currentTarget) closePoem();
+  DOM.poemOverlay.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closePoem();
   });
 
-  document.getElementById('secret-overlay').addEventListener('click', (event) => {
-    if (event.target === event.currentTarget) closeSecret();
+  DOM.secretOverlay.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeSecret();
   });
 
   /* ============================================================
      CUSTOM CURSOR
   ============================================================ */
-  (function initCursor() {
-    const el = document.getElementById('custom-cursor');
-    if (!el) return;
-    // Only activate on devices with a fine pointer (desktop/mouse)
-    if (!window.matchMedia('(pointer: fine)').matches) return;
+  /* ============================================================
+     TIME-OF-DAY THEME
+  ============================================================ */
+  (function applyTimeTheme() {
+    const h = new Date().getHours();
+    const tint = document.getElementById('time-tint');
+    if (!tint) return;
 
-    let mouseX = -100, mouseY = -100;
-    let curX = -100, curY = -100;
-    let raf;
-
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      el.classList.add('visible');
-    });
-
-    document.addEventListener('mouseleave', () => el.classList.remove('visible'));
-
-    document.addEventListener('mousedown', () => el.classList.add('clicking'));
-    document.addEventListener('mouseup',   () => el.classList.remove('clicking'));
-
-    function loop() {
-      // Smooth follow with lerp
-      curX += (mouseX - curX) * 0.18;
-      curY += (mouseY - curY) * 0.18;
-      el.style.left = curX + 'px';
-      el.style.top  = curY + 'px';
-      raf = requestAnimationFrame(loop);
+    let color, label;
+    if (h >= 5 && h < 8) {
+      // Madrugada / amanecer — azul frío rosado
+      color = 'rgba(100,120,180,0.08)';
+    } else if (h >= 8 && h < 13) {
+      // Mañana — neutro, paleta base
+      color = 'rgba(0,0,0,0)';
+    } else if (h >= 13 && h < 18) {
+      // Tarde — dorado cálido
+      color = 'rgba(180,130,60,0.07)';
+    } else if (h >= 18 && h < 21) {
+      // Atardecer — naranja suave
+      color = 'rgba(160,90,50,0.09)';
+    } else {
+      // Noche — índigo profundo
+      color = 'rgba(40,30,90,0.12)';
     }
-    loop();
+
+    tint.style.background = color;
+  })();
+
+  /* ============================================================
+     SECRET READING PROGRESS BAR
+  ============================================================ */
+  (function initReadingBar() {
+    const container = document.getElementById('secret-long-text');
+    const fill      = document.getElementById('secret-progress-fill');
+    if (!container || !fill) return;
+
+    container.addEventListener('scroll', () => {
+      const scrolled = container.scrollTop;
+      const total    = container.scrollHeight - container.clientHeight;
+      const pct      = total > 0 ? Math.min(100, (scrolled / total) * 100) : 100;
+      fill.style.width = pct + '%';
+    }, { passive: true });
+  })();
+
+  /* ============================================================
+     REST MODE — dims the countdown after 3 min of inactivity
+  ============================================================ */
+  (function initRestMode() {
+    const phaseWait = DOM.phaseWait;
+    if (!phaseWait) return;
+    const REST_MS = 3 * 60 * 1000; // 3 minutes
+    let restTimer;
+
+    function enterRest() {
+      phaseWait.classList.add('rest-mode');
+    }
+    function exitRest() {
+      phaseWait.classList.remove('rest-mode');
+      clearTimeout(restTimer);
+      restTimer = setTimeout(enterRest, REST_MS);
+    }
+
+    // Start timer immediately
+    restTimer = setTimeout(enterRest, REST_MS);
+
+    // Any interaction wakes it back up
+    ['mousemove','mousedown','touchstart','keydown'].forEach(evt => {
+      document.addEventListener(evt, exitRest, { passive: true });
+    });
+  })();
+
+  /* ============================================================
+     RETURN TO ACROSTIC — localStorage flag across sessions
+  ============================================================ */
+  (function checkReturnVisit() {
+    try {
+      const completed = localStorage.getItem('sam_completed');
+      if (completed === '1') {
+        // Skip straight to end screen
+        DOM.phaseWait.style.display = 'none';
+        DOM.bgLayer.classList.add('end-bg');
+        DOM.bgOverlay.classList.add('glow');
+        DOM.endScreen.classList.add('active');
+        DOM.replayBtn.classList.add('show');
+        DOM.secretBtn.classList.add('show');
+        updatePoemCounter();
+      }
+    } catch(e) {}
   })();
 
   /* ============================================================
